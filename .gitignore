@@ -3,3 +3,4 @@ build*/
 legacy/
 .DS_Store
 
+.vscode
