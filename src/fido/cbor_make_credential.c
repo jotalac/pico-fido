@@ -543,6 +543,9 @@ int cbor_make_credential(const uint8_t *data, size_t len) {
 #endif
             }
         }
+        else if (check_user_presence() == false) {
+            CBOR_ERROR(CTAP2_ERR_OPERATION_DENIED);
+        }
         flags |= FIDO2_AUT_FLAG_UP;
         clearUserPresentFlag();
         clearUserVerifiedFlag();
