@@ -15,21 +15,17 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* FIDO_FILES_PART is set when the combined firmware merges this table with OpenPGP's:
+ * 1 = declarations, 2 = table entries, 3 = global file handles. */
+#if !defined(FIDO_FILES_PART) || FIDO_FILES_PART == 1
 #include "files.h"
-
-#ifdef ENABLE_OPENPGP
-/* Part 1 of OpenPGP's files.c: its file IDs and the data its table points to.
- * Both apps use the same header guard and both define these two IDs. */
-#undef _FILES_H_
-#undef EF_VAULT_KEY
-#undef EF_DEV_CONF
-#define OPENPGP_FILES_PART 1
-#include "../../pico-openpgp/src/openpgp/files.c"
-#undef OPENPGP_FILES_PART
 #endif
 
+#ifndef FIDO_FILES_PART
 file_entry_t file_entries[] = {
     { .fid = 0x3f00, .parent = 0xff, .name = NULL, .type = FILE_TYPE_DF, .data = NULL, .ef_structure = 0, .acl = { 0 } }, // MF
+#endif
+#if !defined(FIDO_FILES_PART) || FIDO_FILES_PART == 2
     { .fid = EF_KEY_DEV, .parent = 0, .name = NULL, .type = FILE_TYPE_INTERNAL_EF | FILE_DATA_FLASH, .data = NULL, .ef_structure = FILE_EF_TRANSPARENT, .acl = ACL_NONE }, // Device Key
     { .fid = EF_KEY_DEV_ENC, .parent = 0, .name = NULL,.type = FILE_TYPE_INTERNAL_EF | FILE_DATA_FLASH, .data = NULL, .ef_structure = FILE_EF_TRANSPARENT, .acl = ACL_NONE }, // Device Key Enc
     { .fid = EF_EE_DEV,  .parent = 0, .name = NULL, .type = FILE_TYPE_INTERNAL_EF | FILE_DATA_FLASH, .data = NULL, .ef_structure = FILE_EF_TRANSPARENT, .acl = ACL_NONE }, // End Entity Certificate Device
@@ -47,20 +43,16 @@ file_entry_t file_entries[] = {
     { .fid = EF_LARGEBLOB,  .parent = 0, .name = NULL, .type = FILE_TYPE_INTERNAL_EF | FILE_DATA_FLASH, .data = NULL, .ef_structure = FILE_EF_TRANSPARENT, .acl = ACL_NONE }, // Large Blob
     { .fid = EF_OTP_PIN,  .parent = 0, .name = NULL, .type = FILE_TYPE_INTERNAL_EF | FILE_DATA_FLASH, .data = NULL, .ef_structure = FILE_EF_TRANSPARENT, .acl = ACL_NONE },
     { .fid = EF_PIN_ADMIN,  .parent = 0, .name = NULL, .type = FILE_TYPE_INTERNAL_EF | FILE_DATA_FLASH, .data = NULL, .ef_structure = FILE_EF_TRANSPARENT, .acl = ACL_NONE }, // ADMIN PIN
-#ifdef ENABLE_OPENPGP
-    /* Part 2 of OpenPGP's files.c: its table entries, without its MF and terminator. */
-#define OPENPGP_FILES_PART 2
-#include "../../pico-openpgp/src/openpgp/files.c"
-#undef OPENPGP_FILES_PART
 #endif
+#ifndef FIDO_FILES_PART
     { .fid = 0x0000, .parent = 0xff, .name = NULL, .type = FILE_TYPE_NOT_KNOWN, .data = NULL, .ef_structure = 0, .acl = { 0 } }  //end
 };
 
 const file_t *MF = &file_entries[0].file;
 const file_entry_t *file_last = &file_entries[sizeof(file_entries) / sizeof(file_entry_t) - 1];
-#ifdef ENABLE_OPENPGP
-const file_t *file_openpgp = &file_entries[sizeof(file_entries) / sizeof(file_entry_t) - 2].file;
 #endif
+
+#if !defined(FIDO_FILES_PART) || FIDO_FILES_PART == 3
 file_t *ef_keydev = NULL;
 file_t *ef_certdev = NULL;
 file_t *ef_counter = NULL;
@@ -70,3 +62,4 @@ file_t *ef_authtoken = NULL;
 file_t *ef_keydev_enc = NULL;
 file_t *ef_largeblob = NULL;
 file_t *ef_vault_key = NULL;
+#endif

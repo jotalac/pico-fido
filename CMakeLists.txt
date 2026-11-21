@@ -1,20 +1,3 @@
-# pico_sdk_init() is called inside pico-keys-sdk/picokeys_sdk_import.cmake
-# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
-if(WIN32)
-    set(USERHOME $ENV{USERPROFILE})
-else()
-    set(USERHOME $ENV{HOME})
-endif()
-set(sdkVersion 2.3.1)
-set(toolchainVersion 15_2_Rel1)
-set(picotoolVersion 2.3.1)
-set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
-if (EXISTS ${picoVscode})
-    include(${picoVscode})
-endif()
-# ====================================================================================
-set(PICO_BOARD waveshare_rp2040_zero CACHE STRING "Board type")
-
 #
 # This file is part of the Pico FIDO distribution (https://github.com/polhenarejos/pico-fido).
 # Copyright (c) 2022 Pol Henarejos.
@@ -103,24 +86,6 @@ else()
     set(USB_ITF_CCID 0)
 endif()
 
-# OpenPGP smartcard app from the pico-openpgp submodule (GPG sign/decrypt).
-option(ENABLE_OPENPGP "Add the OpenPGP app from pico-openpgp" ON)
-if(ESP_PLATFORM)
-    set(ENABLE_OPENPGP OFF)
-endif()
-if(ENABLE_OPENPGP)
-    set(OPENPGP_DIR ${CMAKE_CURRENT_LIST_DIR}/pico-openpgp)
-    if(NOT EXISTS ${OPENPGP_DIR}/src/openpgp/openpgp.c)
-        message(FATAL_ERROR "pico-openpgp is missing. Run: git submodule update --init pico-openpgp")
-    endif()
-    add_compile_definitions(ENABLE_OPENPGP=1 ENABLE_ADMINLESS_MODE=1)
-    set(USB_ITF_CCID 1)
-    set(USB_ITF_WCID 1)
-    message(STATUS "OpenPGP Application: \t\t enabled")
-else()
-    message(STATUS "OpenPGP Application: \t\t disabled")
-endif()
-
 set(USB_ITF_HID 1)
 include(pico-keys-sdk/picokeys_sdk_import.cmake)
 SET_BUILD_NUMBER("${CMAKE_CURRENT_LIST_DIR}")
@@ -171,43 +136,6 @@ if(ENABLE_OTP_APP)
     )
 endif()
 
-if(ENABLE_OPENPGP)
-    # Left out on purpose:
-    #   files.c       merged into src/fido/files.c
-    #   defs.c        the firmware identifies itself as Pico FIDO
-    #   management.c  src/fido/management.c serves both apps
-    #   openpgp_vault.c, piv.c, src/piv/*  replaced by src/openpgp_bridge/openpgp_stubs.c
-    set(OPENPGP_SOURCES
-        ${OPENPGP_DIR}/src/openpgp/openpgp.c
-        ${OPENPGP_DIR}/src/openpgp/object_provider.c
-        ${OPENPGP_DIR}/src/openpgp/key_container.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_select.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_get_data.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_verify.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_put_data.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_select_data.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_import_data.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_version.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_change_pin.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_mse.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_internal_aut.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_challenge.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_activate_file.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_terminate_df.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_pso.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_keypair_gen.c
-        ${OPENPGP_DIR}/src/openpgp/cmd_reset_retry.c
-        ${OPENPGP_DIR}/src/openpgp/do.c
-        ${CMAKE_CURRENT_LIST_DIR}/src/openpgp_bridge/openpgp_stubs.c
-    )
-    # Both apps have headers called files.h, version.h, management.h and
-    # object_provider.h, so OpenPGP sources must look in their own folder first.
-    set_source_files_properties(${OPENPGP_SOURCES} PROPERTIES COMPILE_OPTIONS
-        "-iquote${OPENPGP_DIR}/src/openpgp;-iquote${OPENPGP_DIR}/src/piv"
-    )
-    list(APPEND SOURCES ${OPENPGP_SOURCES})
-endif()
-
 SET_VERSION(ver_major ver_minor "${CMAKE_CURRENT_LIST_DIR}/src/fido/version.h")
 if(ESP_PLATFORM)
     project(pico_fido)
@@ -228,7 +156,7 @@ if(NOT ESP_PLATFORM)
 
     picokeys_apply_strict_flags(
         SOURCES ${SOURCES}
-        FILTER_REGEX "/src/fido/|/src/openpgp/|/src/openpgp_bridge/|/pico-keys-sdk/src/|/pico-keys-sdk/config/"
+        FILTER_REGEX "/src/fido/|/pico-keys-sdk/src/|/pico-keys-sdk/config/"
     )
 
     if(NOT MSVC)
