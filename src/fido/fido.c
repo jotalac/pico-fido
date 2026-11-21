@@ -532,6 +532,10 @@ void init_fido(void) {
 #endif
 }
 
+#ifdef ENABLE_DISPLAY
+#include "display.h"
+#endif
+
 int wait_button_pressed(void) {
     bool previous_force_button_wait = force_button_wait;
 #if defined(FORCE_BUTTON_WAIT) && !defined(ENABLE_EMULATION)
@@ -555,6 +559,14 @@ int wait_button_pressed_timeout(uint32_t timeout_seconds) {
 #endif
     if (timeout_seconds != 0 || force_button_wait) {
         uint8_t operation = current_fido_operation;
+#ifdef ENABLE_DISPLAY
+        if (operation != OP_NONE) {
+            bool is_ssh = rp_id != NULL && rp_id_len >= 4 && memcmp(rp_id, "ssh:", 4) == 0;
+            display_set_request(is_ssh ? DISPLAY_SOURCE_SSH : DISPLAY_SOURCE_PASSKEY,
+                                operation == OP_MC ? DISPLAY_ACTION_REGISTER : DISPLAY_ACTION_LOGIN,
+                                is_ssh ? rp_id + 4 : rp_id, is_ssh ? rp_id_len - 4 : rp_id_len);
+        }
+#endif
         event_field_t fields[2];
         size_t fields_len = 0;
         if (current_fido_operation != OP_NONE) {

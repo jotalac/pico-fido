@@ -29,6 +29,10 @@
 #include "fs/phy.h"
 #include "files.h"
 
+#ifdef ENABLE_DISPLAY
+#include "display.h"
+#endif
+
 extern bool needs_power_cycle;
 
 static bool fido_reset_should_clear(uint16_t fid) {
@@ -124,6 +128,9 @@ int cbor_reset(void) {
     if (!(phy_data.opts & PHY_OPT_DISABLE_POWER_RESET) && board_millis() > 10000) {
         return CTAP2_ERR_NOT_ALLOWED;
     }
+#endif
+#ifdef ENABLE_DISPLAY
+    display_set_request(DISPLAY_SOURCE_PASSKEY, DISPLAY_ACTION_RESET, NULL, 0);
 #endif
     int ret = wait_button_pressed();
     if (ret == 1) {
