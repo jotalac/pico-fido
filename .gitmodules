@@ -1,3 +1,6 @@
 [submodule "pico-keys-sdk"]
 	path = pico-keys-sdk
 	url = https://github.com/jotalac/pico-keys-sdk
+[submodule "pico-openpgp"]
+	path = pico-openpgp
+	url = git@github.com:jotalac/pico-openpgp.git

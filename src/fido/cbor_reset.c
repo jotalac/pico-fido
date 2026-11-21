@@ -34,6 +34,13 @@ extern bool needs_power_cycle;
 static bool fido_reset_should_clear(uint16_t fid) {
     uint8_t prefix = (uint8_t)(fid >> 8);
 
+#ifdef ENABLE_OPENPGP
+    // Shared with OpenPGP. Deleting a file already removes its own metadata entry.
+    if (fid == EF_META) {
+        return false;
+    }
+#endif
+
     switch (fid) {
         case EF_KEY_DEV:
         case EF_KEY_DEV_ENC:
