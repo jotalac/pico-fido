@@ -190,6 +190,10 @@ int cbor_config(const uint8_t *data, size_t len) {
     }
 
     if (subcommand == 0xFF) {
+        /* Device lock is disabled: enabling it overflows a stack buffer and breaks the master key. */
+        if (vendorCommandId == CTAP_CONFIG_AUT_DISABLE || vendorCommandId == CTAP_CONFIG_AUT_ENABLE) {
+            CBOR_ERROR(CTAP2_ERR_NOT_ALLOWED);
+        }
         if (vendorCommandId == CTAP_CONFIG_AUT_DISABLE){
             if (!file_has_data(ef_keydev_enc)) {
                 CBOR_ERROR(CTAP2_ERR_NOT_ALLOWED);

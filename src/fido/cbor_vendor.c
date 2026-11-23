@@ -134,6 +134,11 @@ static int cbor_vendor_generic(uint8_t cmd, const uint8_t *data, size_t len) {
     CBOR_PARSE_MAP_END(map, 1);
     cbor_encoder_init(&encoder, ctap_resp->init.data + 1, CTAP_MAX_CBOR_PAYLOAD, 0);
 
+    /* These belong to the disabled device lock. Loading a blob would erase the master key. */
+    if (cmd == CTAP_VENDOR_BACKUP || cmd == CTAP_VENDOR_UNLOCK) {
+        CBOR_ERROR(CTAP2_ERR_NOT_ALLOWED);
+    }
+
     if (cmd == CTAP_VENDOR_BACKUP) {
         if (vendorCmd == 0x01) {
             if (has_keydev_dec == false) {
